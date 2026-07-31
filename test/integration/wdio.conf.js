@@ -3,6 +3,7 @@
 
 const testConfig = require('../testConfig');
 const fs = require('fs');
+const os = require('os');
 
 /**
  * Given a preset key, return set set of common configuration keys for a given service, os, and browser
@@ -79,9 +80,35 @@ function processPreset(preset) {
                 OS: null, // not used by chromedriver; it is run on the host, whatever it is
                 OS_VERSION: null, // TODO: detect os version.
                 BROWSER: 'chrome',
-                BROWSER_VERSION: null, // will use the installed chrome on this host
+                // Defaults to the installed chrome on this host; override with BROWSER_VERSION.
+                BROWSER_VERSION: e.BROWSER_VERSION || null,
                 HEADLESS: e.HEADLESS || 't',
                 SERVICE: 'chromedriver',
+            };
+        case 'gd':
+            // geckodriver: runs the Firefox installed on this host. WebdriverIO's
+            // built-in driver management downloads a matching geckodriver.
+            return {
+                OS: null,
+                OS_VERSION: null,
+                BROWSER: 'firefox',
+                BROWSER_VERSION: e.BROWSER_VERSION || null,
+                HEADLESS: e.HEADLESS || 't',
+                SERVICE: 'geckodriver',
+            };
+        case 'grid':
+            // Remote Selenium: connect to a standalone Selenium/Chrome server (e.g. a
+            // `selenium/standalone-chrome` container) instead of launching a browser on
+            // this host. Useful on servers that lack the system libraries a local Chrome
+            // needs. Connection is configured via SELENIUM_HOST / SELENIUM_PORT below.
+            return {
+                OS: null,
+                OS_VERSION: null,
+                BROWSER: e.BROWSER || 'chrome',
+                BROWSER_VERSION: e.BROWSER_VERSION || null,
+                // The browser is already headless inside the container image.
+                HEADLESS: e.HEADLESS || 'f',
+                SERVICE: 'grid',
             };
         default:
             throw new Error(`Sorry, "${preset}" is not a preset`);
@@ -186,19 +213,97 @@ function makeCapabilities(config) {
                     '--no-sandbox',
                     '--disable-gpu',
                     '--disable-dev-shm-usage',
+                    // The Narrative makes direct cross-origin XHR calls to the KBase
+                    // services (auth, workspace, etc.), which do not send CORS headers for
+                    // a localhost origin. An interactive browser typically bypasses this;
+                    // headless Chrome does not, so the workspace lookup fails and every cell
+                    // extension errors out during load. Disabling web security lets the
+                    // throwaway test browser make those calls. Chrome only honors
+                    // --disable-web-security when given a dedicated (fresh) user-data-dir.
+                    '--disable-web-security',
+                    `--user-data-dir=${os.tmpdir()}/wdio-chrome-${process.pid}`,
                     `--window-size=${config.WIDTH},${config.HEIGHT}`,
                 ];
                 return {
                     browserName: 'chrome',
-                    browserVersion: '128',
+                    // No browserVersion pin: WebdriverIO's built-in driver management
+                    // (Selenium Manager) uses the Chrome installed on this host and
+                    // downloads the matching chromedriver automatically. Set the
+                    // BROWSER_VERSION env var if a specific version is ever needed.
+                    ...(config.BROWSER_VERSION ? { browserVersion: config.BROWSER_VERSION } : {}),
                     acceptInsecureCerts: true,
                     maxInstances: 1,
                     'goog:chromeOptions': {
                         args,
                     },
+                    // Capture the browser console log so it can be dumped after each test
+                    // (see the afterTest hook). Requires the classic webdriver protocol.
+                    'goog:loggingPrefs': {
+                        browser: 'ALL',
+                    },
                     'wdio:enforceWebDriverClassic': true,
                 };
             })();
+        case 'geckodriver':
+            return (() => {
+                const args = [];
+                if (config.HEADLESS === 't') {
+                    args.push('-headless');
+                }
+                args.push('--width', `${config.WIDTH}`, '--height', `${config.HEIGHT}`);
+                return {
+                    browserName: 'firefox',
+                    // No browserVersion pin: WebdriverIO uses the installed Firefox and
+                    // downloads a matching geckodriver. Set BROWSER_VERSION to override.
+                    ...(config.BROWSER_VERSION ? { browserVersion: config.BROWSER_VERSION } : {}),
+                    acceptInsecureCerts: true,
+                    maxInstances: 1,
+                    'moz:firefoxOptions': {
+                        args,
+                        prefs: {
+                            // The Narrative makes direct cross-origin XHR calls to the KBase
+                            // services, which don't send CORS headers for a localhost origin.
+                            // Relax Firefox's CORS enforcement so the throwaway test browser
+                            // can make those calls (equivalent to Chrome's
+                            // --disable-web-security).
+                            'security.fileuri.strict_origin_policy': false,
+                            'content.cors.disable': true,
+                            'network.cors_preflight.block_synchronous_requests': false,
+                        },
+                    },
+                    // Capture the browser console log after each test (see the afterTest
+                    // hook). Firefox exposes fewer log types than Chrome, so this may be
+                    // empty; it is best-effort.
+                    'goog:loggingPrefs': {
+                        browser: 'ALL',
+                    },
+                    'wdio:enforceWebDriverClassic': true,
+                };
+            })();
+        case 'grid':
+            // Chrome running inside a remote Selenium container. The browser is headless
+            // in the image; we still pass the sandbox/shm/CORS flags Chrome needs, plus
+            // --disable-web-security (with a fresh user-data-dir) so the Narrative's
+            // cross-origin service calls work, matching the local chromedriver preset.
+            return {
+                browserName: 'chrome',
+                acceptInsecureCerts: true,
+                maxInstances: 1,
+                'goog:chromeOptions': {
+                    args: [
+                        '--no-sandbox',
+                        '--disable-gpu',
+                        '--disable-dev-shm-usage',
+                        '--disable-web-security',
+                        `--user-data-dir=${os.tmpdir()}/wdio-chrome-${process.pid}`,
+                        `--window-size=${config.WIDTH},${config.HEIGHT}`,
+                    ],
+                },
+                'goog:loggingPrefs': {
+                    browser: 'ALL',
+                },
+                'wdio:enforceWebDriverClassic': true,
+            };
         case 'selenium-standalone':
             switch (config.BROWSER) {
                 case 'chrome':
@@ -495,9 +600,59 @@ const wdioConfig = {
     // },
     /**
      * Function to be executed after a test (in Mocha/Jasmine).
+     * Dumps the browser console log so failures that originate in page JS (errors,
+     * warnings, uncaught exceptions) are visible in the test output. Only the browser
+     * log is captured; it's cleared by each getLogs call, so this shows the log for the
+     * just-completed test. Guarded so it never masks the real test failure.
      */
-    // afterTest: function(test, context, { error, result, duration, passed, retries }) {
-    // },
+    afterTest: async function (test, context, { passed }) {
+        if (typeof browser === 'undefined') {
+            return;
+        }
+        // Collect log entries from two sources:
+        //  1. Chrome/chromedriver: the native getLogs('browser') API.
+        //  2. Any driver (e.g. Firefox/geckodriver): the console shim buffer installed
+        //     by afterCommand on window.__wdioConsoleLog.
+        // Each entry is { level, message }.
+        const entries = [];
+        if (typeof browser.getLogs === 'function') {
+            try {
+                const logs = await browser.getLogs('browser');
+                (logs || []).forEach((entry) => {
+                    entries.push({ level: entry.level, message: entry.message });
+                });
+            } catch (err) {
+                // getLogs unsupported/failed for this driver; fall through to the buffer.
+            }
+        }
+        try {
+            const buffered = await browser.execute(() => {
+                const log = window.__wdioConsoleLog || [];
+                window.__wdioConsoleLog = [];
+                return log;
+            });
+            (buffered || []).forEach((entry) => {
+                entries.push({
+                    level: (entry.level || 'log').toUpperCase(),
+                    message: entry.message,
+                });
+            });
+        } catch (err) {
+            // page may be gone / navigation failed; ignore.
+        }
+
+        if (!entries.length) {
+            return;
+        }
+        const header = `----- browser console log for "${test.title}"${
+            passed ? '' : ' (FAILED)'
+        } -----`;
+        console.log(header);
+        entries.forEach((entry) => {
+            console.log(`[${entry.level}] ${entry.message}`);
+        });
+        console.log('-'.repeat(header.length));
+    },
 
     /**
      * Hook that gets executed after the suite has ended
@@ -506,14 +661,56 @@ const wdioConfig = {
     // afterSuite: function (suite) {
     // },
     /**
-     * Runs after a WebdriverIO command gets executed
+     * Runs after a WebdriverIO command gets executed.
+     * After each navigation, (re)install a console shim in the freshly-loaded page that
+     * buffers console.* output onto window.__wdioConsoleLog. This is how the browser
+     * console is captured on drivers that don't support the classic getLogs API (notably
+     * Firefox/geckodriver); afterTest reads the buffer. Best-effort and never fatal.
      * @param {String} commandName hook command name
      * @param {Array} args arguments that command would receive
      * @param {Number} result 0 - command success, 1 - command error
      * @param {Object} error error object if any
      */
-    // afterCommand: function (commandName, args, result, error) {
-    // },
+    afterCommand: async function (commandName) {
+        if (!['url', 'navigateTo', 'refresh'].includes(commandName)) {
+            return;
+        }
+        try {
+            await browser.execute(() => {
+                if (window.__wdioConsoleShimInstalled) {
+                    return;
+                }
+                window.__wdioConsoleShimInstalled = true;
+                window.__wdioConsoleLog = [];
+                ['log', 'info', 'warn', 'error', 'debug'].forEach((level) => {
+                    const original = console[level] ? console[level].bind(console) : null;
+                    console[level] = function (...cargs) {
+                        try {
+                            window.__wdioConsoleLog.push({
+                                level,
+                                message: cargs
+                                    .map((a) => {
+                                        try {
+                                            return typeof a === 'string' ? a : JSON.stringify(a);
+                                        } catch (e) {
+                                            return String(a);
+                                        }
+                                    })
+                                    .join(' '),
+                            });
+                        } catch (e) {
+                            /* ignore */
+                        }
+                        if (original) {
+                            original(...cargs);
+                        }
+                    };
+                });
+            });
+        } catch (err) {
+            // navigation may have failed or the page may not be ready; ignore.
+        }
+    },
     /**
      * Gets executed after all tests are done. You still have access to all global variables from
      * the test.
@@ -557,6 +754,17 @@ wdioConfig.testParams = testParams;
 if (testParams.SERVICE === 'browserstack') {
     wdioConfig.user = testParams.SERVICE_USER;
     wdioConfig.key = testParams.SERVICE_KEY;
+}
+
+// For the remote Selenium grid, point the driver at the standalone Selenium server
+// (e.g. a `selenium/standalone-chrome` container) instead of managing a local driver.
+// Defaults target a container published on localhost:4444.
+if (testParams.SERVICE === 'grid') {
+    wdioConfig.hostname = process.env.SELENIUM_HOST || 'localhost';
+    wdioConfig.port = parseInt(process.env.SELENIUM_PORT || '4444', 10);
+    wdioConfig.path = process.env.SELENIUM_PATH || '/wd/hub';
+    // Disable WebdriverIO's automatic local driver management; we're using a remote one.
+    wdioConfig.automationProtocol = 'webdriver';
 }
 
 exports.config = wdioConfig;

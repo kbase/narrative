@@ -284,6 +284,15 @@ define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
                 return [url, '/api/', version, callParams.operation].join('');
             })();
 
+            // TEMP DIAGNOSTIC (revert): log token shape and, on failure, the full
+            // response body. This is used to demonstrate the Cloudflare bot-challenge
+            // page that gets returned to the headless browser instead of the API
+            // response (a 403 "Just a moment..." HTML page).
+            const _tokLen = token ? token.length : 0;
+            const _tokPreview = token ? `${token.slice(0, 2)}...${token.slice(-2)}` : '(none)';
+            console.warn(
+                `[auth diag] calling ${callString} with Authorization len=${_tokLen} preview=${_tokPreview}`
+            );
             return Promise.resolve(
                 $.ajax({
                     url: callString,
@@ -294,6 +303,10 @@ define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
                         Authorization: token,
                         'Content-Type': 'application/json',
                     },
+                }).fail((jqXHR, textStatus) => {
+                    console.warn(
+                        `auth FAILED ${callString} status=${jqXHR.status} ${textStatus} body=${jqXHR.responseText}`
+                    );
                 })
             );
         }

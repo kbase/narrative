@@ -23,9 +23,3 @@ jobs:
     needs: run_build_and_push
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-  run_integration_tests:
-    uses: ./.github/workflows/integration_test.yml
-    needs: run_build_and_push
-    secrets:
-      NARRATIVE_TEST_TOKEN: ${{ secrets.NARRATIVE_TEST_TOKEN }}

@@ -451,6 +451,7 @@ define(['api/auth', 'narrativeConfig', 'uuid', 'testUtil'], (Auth, Config, Uuid,
                 name: backupCookieName,
                 value: backupCookieValue,
                 domain: 'localhost',
+                expires: Date.now() + 14 * 1000 * 60 * 60 * 24,
             });
 
             // The backup cookie should be set.

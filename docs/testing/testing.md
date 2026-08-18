@@ -111,7 +111,7 @@ These tests are run automatically on a pull request to the Narrative Github repo
 
 Unit tests are automatically run without credentials, skipping various tests that are, really, more like integration tests.
 
-The integration tests that run with webdriver.io do require an authentication token. This is the `NARRATIVE_TEST_TOKEN` Github secret in the Narrative repo. It will become available in the test environment as `KBASE_TEST_TOKEN`, which is the variable that the `wdio.conf.js` file looks for.
+The integration tests are not run in Github Actions; they run on a dedicated test server instead. Wherever they run, the webdriver.io integration tests require an authentication token, which they read from the `KBASE_TEST_TOKEN` environment variable (the variable that `wdio.conf.js` looks for).
 
 ### Adding Your Own Tests
 

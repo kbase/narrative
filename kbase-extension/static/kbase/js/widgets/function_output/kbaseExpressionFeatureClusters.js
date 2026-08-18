@@ -555,7 +555,9 @@ define([
                     if (feature) {
                         if (feature.aliases && feature.aliases.length > 0)
                             aliases = feature.aliases.join(', ');
-                        type = feature.type;
+                        if (feature.type) {
+                            type = feature.type;
+                        }
                         if (feature.function) {
                             func = feature.function;
                         }

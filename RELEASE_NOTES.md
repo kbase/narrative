@@ -4,6 +4,13 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.5.7 and IPython 8.28.x (more notes will follow).
 
+## Version 5.5.1
+- PTV-1930 - show a placeholder in the feature table when a value is missing
+- Remove the hardcoded 14-day auth cookie lifetime; the cookie now tracks the real token expiration from the auth service
+- Integration tests are no longer run in GitHub Actions; they run on a dedicated test server
+- JavaScript dependencies updated (notably eslint 10, stylelint pinned at 16.x, and the wdio 9 test stack); `qgrid` removed
+- Python dependencies updated to their latest Python 3.11-compatible versions (including numpy 2.4.6, pandas 2.3.3, scipy 1.17.1, cryptography 49.0.0, ipython 8.39.0); `qgrid` removed. `notebook` remains pinned below 7.
+
 ## Version 5.5.0
 - UIP-52 - fix integration tests
 - PTV-1913 - force backup authentication cookie to reset on load

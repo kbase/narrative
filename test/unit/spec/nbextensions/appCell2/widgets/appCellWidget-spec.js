@@ -7,6 +7,7 @@ define([
     'common/runtime',
     'common/semaphore',
     'common/ui',
+    'narrativeConfig',
     'testUtil',
     'narrativeMocks',
     '/test/data/jobsData',
@@ -21,6 +22,7 @@ define([
     Runtime,
     Semaphore,
     UI,
+    Config,
     TestUtil,
     Mocks,
     JobsData,
@@ -133,6 +135,30 @@ define([
             namespace: 'NarrativeTest',
         },
     ];
+
+    /**
+     * Stubs the NarrativeMethodStore and Catalog service calls that the app cell makes
+     * while loading its spec (via getAppSpec). The widget uses the AMD kb_service clients,
+     * which issue jsonrpc-1.1 requests through jQuery.ajax, so we intercept those with
+     * jasmine.Ajax rather than spying on the (unrelated) window globals.
+     */
+    function stubAppSpecRequests() {
+        Mocks.mockJsonRpc1Call({
+            url: Config.url('narrative_method_store'),
+            body: /get_method_full_info/,
+            response: methodFullInfo,
+        });
+        Mocks.mockJsonRpc1Call({
+            url: Config.url('narrative_method_store'),
+            body: /get_method_spec/,
+            response: [appSpec.spec],
+        });
+        Mocks.mockJsonRpc1Call({
+            url: Config.url('catalog'),
+            body: /get_exec_aggr_stats/,
+            response: [],
+        });
+    }
 
     function generateCellData() {
         return TestUtil.JSONcopy({
@@ -304,19 +330,6 @@ define([
             readonly: false,
             getAuthToken: () => 'fake_token',
         };
-        spyOn(window, 'NarrativeMethodStore').and.returnValue({
-            get_method_full_info: () => {
-                return Promise.resolve(methodFullInfo);
-            },
-            get_method_spec: () => {
-                return Promise.resolve([appSpec.spec]);
-            },
-        });
-        spyOn(window, 'Catalog').and.returnValue({
-            get_exec_aggr_stats: () => {
-                return Promise.resolve([]);
-            },
-        });
         return ctx.appCellWidgetInstance;
     }
 
@@ -353,6 +366,8 @@ define([
 
     describe('The AppCellWidget instance', () => {
         beforeEach(function () {
+            jasmine.Ajax.install();
+            stubAppSpecRequests();
             Jupyter.notebook = {
                 writable: true,
             };
@@ -378,6 +393,7 @@ define([
         });
 
         afterEach(() => {
+            jasmine.Ajax.uninstall();
             TestUtil.clearRuntime();
             Jupyter.notebook = null;
             Jupyter.narrative = null;

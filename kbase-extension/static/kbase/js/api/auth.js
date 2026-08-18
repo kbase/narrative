@@ -24,19 +24,18 @@ define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
             },
         };
 
-        const DEFAULT_TOKEN_LIFE = 14 * 24 * 60 * 60 * 1000; // millis
-
         /**
          * Meant for managing auth or session cookies (mainly auth cookies as set by
          * a developer working locally - which is why this is very very simple).
          * Get a cookie "object" (key-value pairs) as input.
-         * If it's missing name or value, does nothing.
-         * Default expiration time is 14 days.
-         * domain, expires, and max-age are optional
-         * expires is expected to be the timestamp (ms since epoch) it will expire
+         * If it's missing name, does nothing.
+         * expires is REQUIRED and is expected to be the timestamp (ms since epoch)
+         * at which the cookie expires. It must be sourced from the auth service
+         * (a token's real expiration) rather than a hardcoded client-side lifetime,
+         * so the cookie always tracks the actual token lifetime.
+         * domain and max-age are optional.
          * default fields are:
          *  - path = '/'
-         *  - expires = now + 14 days
          * @param {object} cookie
          *  - has the cookie keys: name, value, path, expires, max-age, domain
          *  - adds secure=true, samesite=Lax for KBase use.
@@ -47,16 +46,18 @@ define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
             if (!cookie.name) {
                 return;
             }
+            if (!Number.isInteger(cookie.expires)) {
+                throw new Error(
+                    'setCookie requires an integer `expires` (ms since epoch) sourced from the auth service'
+                );
+            }
             const name = encodeURIComponent(cookie.name);
             const value = encodeURIComponent(cookie.value || '');
             const props = {
-                expires: Date.now() + DEFAULT_TOKEN_LIFE, // gets translated to GMT string
+                expires: cookie.expires, // gets translated to GMT string
                 path: '/',
                 samesite: 'Lax',
             };
-            if (Number.isInteger(cookie.expires)) {
-                props.expires = cookie.expires;
-            }
 
             // Default to secure cookies global setting if not specified.
             if (typeof cookie.secure === 'undefined') {
@@ -283,6 +284,15 @@ define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
                 return [url, '/api/', version, callParams.operation].join('');
             })();
 
+            // TEMP DIAGNOSTIC (revert): log token shape and, on failure, the full
+            // response body. This is used to demonstrate the Cloudflare bot-challenge
+            // page that gets returned to the headless browser instead of the API
+            // response (a 403 "Just a moment..." HTML page).
+            const _tokLen = token ? token.length : 0;
+            const _tokPreview = token ? `${token.slice(0, 2)}...${token.slice(-2)}` : '(none)';
+            console.warn(
+                `[auth diag] calling ${callString} with Authorization len=${_tokLen} preview=${_tokPreview}`
+            );
             return Promise.resolve(
                 $.ajax({
                     url: callString,
@@ -293,6 +303,10 @@ define(['bluebird', 'jquery', 'narrativeConfig'], (Promise, $, Config) => {
                         Authorization: token,
                         'Content-Type': 'application/json',
                     },
+                }).fail((jqXHR, textStatus) => {
+                    console.warn(
+                        `auth FAILED ${callString} status=${jqXHR.status} ${textStatus} body=${jqXHR.responseText}`
+                    );
                 })
             );
         }

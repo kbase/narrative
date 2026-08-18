@@ -122,10 +122,13 @@ define(['jquery', 'util/display', 'narrativeConfig', 'util/string'], (
                 const properId = $('<div>').text(userId).html();
                 expect($nameTarget[0].innerHTML).toContain(fullName);
                 expect($nameTarget[0].innerHTML).toContain(properId);
+                // The username is HTML-escaped before being placed in the href, so the
+                // link points at the escaped id (not the raw, XSS-prone value). Both the
+                // href and the link text use the escaped form.
                 expect($nameTarget[0].innerHTML).toContain(
                     ' (<a href="' +
                         profilePageUrl +
-                        userId +
+                        properId +
                         '" target="_blank">' +
                         properId +
                         '</a>)'

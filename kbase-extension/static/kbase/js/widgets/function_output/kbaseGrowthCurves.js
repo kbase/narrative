@@ -1,12 +1,9 @@
-define([
-    'kbwidget',
-    'bootstrap',
-    'jquery',
-    'plotly',
-    'kbaseGrowthMatrixAbstract',
-    'kbaseTabs',
-    'jquery-dataTables',
-], (KBWidget, bootstrap, $, Plotly, kbaseGrowthMatrixAbstract, kbaseTabs, jquery_dataTables) => {
+define(['kbwidget', 'jquery', 'plotly', 'kbaseGrowthMatrixAbstract'], (
+    KBWidget,
+    $,
+    Plotly,
+    kbaseGrowthMatrixAbstract
+) => {
     return KBWidget({
         name: 'kbaseGrowthCurves',
         parent: kbaseGrowthMatrixAbstract,
@@ -40,7 +37,6 @@ define([
                 if (sampleSeriesIds == null) {
                     sampleIds = this.matrix.data.col_ids;
                 } else {
-                    //                    sampleIds = sampleSeriesIds.split(',');
                     sampleIds = sampleSeriesIds;
                 }
             } else if (valueType == this.TYPE_SERIES) {
@@ -49,7 +45,6 @@ define([
                 } else {
                     // Build hash of seriesIds for the lookup
                     const seriesIdsSet = {};
-                    //                    var seriesIds = sampleSeriesIds.split(',');
                     const seriesIds = sampleSeriesIds;
                     for (const i in seriesIds) {
                         seriesIdsSet[seriesIds[i]] = true;
@@ -121,7 +116,6 @@ define([
 
         buildOverviewDiv: function ($containerDiv, conditions, valuesType) {
             const self = this;
-            const pref = this.pref;
 
             let msg = '';
             if (valuesType == this.TYPE_SAMPLES) {
@@ -157,14 +151,14 @@ define([
 
                 // Build xValues
                 const xValues = [];
-                for (var j in timePoints) {
+                for (const j in timePoints) {
                     const timePoint = timePoints[j];
                     xValues.push(timePoint.value);
                 }
 
                 // Build yValues
                 const yValues = [];
-                for (var j in timePoints) {
+                for (const j in timePoints) {
                     const rIndex = timePoints[j].index;
                     yValues.push(values[rIndex][sample.columnIndex]);
                 }
@@ -202,7 +196,7 @@ define([
 
                 // Build xValues
                 const xValues = [];
-                for (var j in timePoints) {
+                for (const j in timePoints) {
                     const timePoint = timePoints[j];
                     xValues.push(timePoint.value);
                 }
@@ -210,7 +204,7 @@ define([
                 // Build yValues
                 const yValues = [];
                 const yErrors = [];
-                for (var j in timePoints) {
+                for (const j in timePoints) {
                     const rIndex = timePoints[j].index;
 
                     const samples = series.samples;
@@ -222,8 +216,8 @@ define([
                         s1 += values[rIndex][cIndex];
                         s2 += values[rIndex][cIndex] * values[rIndex][cIndex];
                     }
-                    avg = s1 / n;
-                    se = n > 1 ? Math.sqrt((s2 * n - s1 * s1) / (n - 1) / n / n) : 0;
+                    const avg = s1 / n;
+                    const se = n > 1 ? Math.sqrt((s2 * n - s1 * s1) / (n - 1) / n / n) : 0;
 
                     yValues.push(avg);
                     yErrors.push(se);
@@ -291,7 +285,6 @@ define([
                     },
                 },
                 yaxis: {
-                    title: options.plotYAxisTitle,
                     title: yAxisTitle,
                     autorange: true,
                 },

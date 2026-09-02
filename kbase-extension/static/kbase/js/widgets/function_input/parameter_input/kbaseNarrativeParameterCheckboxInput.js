@@ -258,10 +258,8 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'kbaseNarrativePar
             // handle case with multiple fields
             if (this.$elem.find('#' + this.spec.id).prop('checked')) {
                 return this.checkedValue;
-            } else {
-                return this.uncheckedValue;
             }
-            return '';
+            return this.uncheckedValue;
         },
     });
 });

@@ -1,4 +1,5 @@
 function KBaseFBA_FBAComparison(modeltabs) {
+    'use strict';
     const self = this;
     this.modeltabs = modeltabs;
 
@@ -238,7 +239,7 @@ function KBaseFBA_FBAComparison(modeltabs) {
 
     this.ReactionTab = function (info) {
         const rxn = self.rxnhash[info.id];
-        const output = [
+        return [
             {
                 label: 'Reaction',
                 data: rxn.dispid,
@@ -265,12 +266,11 @@ function KBaseFBA_FBAComparison(modeltabs) {
                 data: rxn.reversestates,
             },
         ];
-        return output;
     };
 
     this.CompoundTab = function (info) {
         const cpd = self.cpdhash[info.id];
-        const output = [
+        return [
             {
                 label: 'Compound',
                 data: cpd.dispid,
@@ -304,13 +304,11 @@ function KBaseFBA_FBAComparison(modeltabs) {
                 data: cpd.excretionstates,
             },
         ];
-
-        return output;
     };
 
     this.CompareTab = function (info) {
         const cpd = self.cpdhash[info.id];
-        const output = [
+        return [
             {
                 label: 'Compound',
                 data: cpd.dispid,
@@ -344,8 +342,6 @@ function KBaseFBA_FBAComparison(modeltabs) {
                 data: cpd.excretionstates,
             },
         ];
-
-        return output;
     };
 
     this.setData = function (indata) {
@@ -355,7 +351,7 @@ function KBaseFBA_FBAComparison(modeltabs) {
         this.rxnhash = {};
         this.fbahash = {};
         this.fbacomparisons = [];
-        for (var i = 0; i < this.fbas.length; i++) {
+        for (let i = 0; i < this.fbas.length; i++) {
             this.fbacomparisons[i] = {};
             this.fbahash[this.fbas[i].id] = this.fbas[i];
             const item = 'F' + (i + 1);
@@ -384,16 +380,16 @@ function KBaseFBA_FBAComparison(modeltabs) {
             let fbaabbrev = 'F' + (i + 1);
             this.fbacomparisons[i]['fba'] = this.fbas[i]['fba'];
             this.fbacomparisons[i]['index'] = fbaabbrev;
-            for (var j = 0; j < this.fbas.length; j++) {
+            for (let j = 0; j < this.fbas.length; j++) {
                 fbaabbrev = 'F' + (j + 1);
                 if (j != i) {
                     if (this.fbas[j].id in this.fbas[i]['fba_similarity']) {
                         const simdata = this.fbas[i]['fba_similarity'][this.fbas[j]['id']];
-                        rfraction =
+                        const rfraction =
                             Math.round(
                                 (100 * (simdata[1] + simdata[2] + simdata[3])) / simdata[0]
                             ) / 100;
-                        cfraction =
+                        const cfraction =
                             Math.round(
                                 (100 * (simdata[5] + simdata[6] + simdata[7])) / simdata[4]
                             ) / 100;
@@ -430,22 +426,22 @@ function KBaseFBA_FBAComparison(modeltabs) {
         }
 
         this.modelreactions = this.data.reactions;
-        for (var i = 0; i < this.modelreactions.length; i++) {
-            var idarray = this.modelreactions[i]['id'].split('_');
-            var namearray = this.modelreactions[i]['name'].split('_');
-            this.modelreactions[i]['name'] = namearray[0];
-            this.modelreactions[i].dispid = idarray[0] + '[' + idarray[1] + ']';
-            this.rxnhash[this.modelreactions[i].id] = this.modelreactions[i];
+        for (const element of this.modelreactions) {
+            let idarray = element['id'].split('_');
+            let namearray = element['name'].split('_');
+            element['name'] = namearray[0];
+            element.dispid = idarray[0] + '[' + idarray[1] + ']';
+            this.rxnhash[element.id] = element;
             let reactants = '';
             let products = '';
             let sign = '<=>';
-            if (this.modelreactions[i].direction == '>') {
+            if (element.direction == '>') {
                 sign = '=>';
-            } else if (this.modelreactions[i].direction == '<') {
+            } else if (element.direction == '<') {
                 sign = '<=';
             }
-            for (var j = 0; j < this.modelreactions[i].stoichiometry.length; j++) {
-                const rgt = this.modelreactions[i].stoichiometry[j];
+            for (let j = 0; j < element.stoichiometry.length; j++) {
+                const rgt = element.stoichiometry[j];
                 idarray = rgt[2].split('_');
                 namearray = rgt[1].split('_');
                 if (rgt[0] < 0) {
@@ -453,7 +449,7 @@ function KBaseFBA_FBAComparison(modeltabs) {
                         reactants += ' + ';
                     }
                     if (rgt[0] != -1) {
-                        var abscoef = Math.round(-1 * 100 * rgt[0]) / 100;
+                        const abscoef = Math.round(-1 * 100 * rgt[0]) / 100;
                         reactants += '(' + abscoef + ') ';
                     }
                     reactants += namearray[0] + '[' + idarray[1] + ']';
@@ -462,123 +458,108 @@ function KBaseFBA_FBAComparison(modeltabs) {
                         products += ' + ';
                     }
                     if (rgt[0] != 1) {
-                        var abscoef = Math.round(100 * rgt[0]) / 100;
+                        const abscoef = Math.round(100 * rgt[0]) / 100;
                         products += '(' + abscoef + ') ';
                     }
                     products += namearray[0] + '[' + idarray[1] + ']';
                 }
             }
-            this.modelreactions[i].equation = reactants + ' ' + sign + ' ' + products;
-            this.modelreactions[i].numfba = 0;
-            var percent = Math.floor(
-                100 *
-                    this.modelreactions[i].state_conservation[
-                        this.modelreactions[i].most_common_state
-                    ][1]
+            element.equation = reactants + ' ' + sign + ' ' + products;
+            element.numfba = 0;
+            const percent = Math.floor(
+                100 * element.state_conservation[element.most_common_state][1]
             );
-            this.modelreactions[i].mostcommonstate =
-                this.modelreactions[i].most_common_state + ' (' + percent + '%)';
-            this.modelreactions[i].inactivestates = 'None';
-            this.modelreactions[i].forwardstates = 'None';
-            this.modelreactions[i].reversestates = 'None';
-            for (var key in this.modelreactions[i].reaction_fluxes) {
-                this.modelreactions[i].numfba++;
-                if (this.modelreactions[i].reaction_fluxes[key][0] == 'IA') {
-                    if (this.modelreactions[i].inactivestates == 'None') {
-                        this.modelreactions[i].inactivestates =
-                            'Count: ' +
-                            this.modelreactions[i].state_conservation['IA'][0] +
-                            '<br>' +
-                            key;
+            element.mostcommonstate = element.most_common_state + ' (' + percent + '%)';
+            element.inactivestates = 'None';
+            element.forwardstates = 'None';
+            element.reversestates = 'None';
+            for (const key in element.reaction_fluxes) {
+                element.numfba++;
+                if (element.reaction_fluxes[key][0] == 'IA') {
+                    if (element.inactivestates == 'None') {
+                        element.inactivestates =
+                            'Count: ' + element.state_conservation['IA'][0] + '<br>' + key;
                     } else {
-                        this.modelreactions[i].inactivestates += '<br>' + key;
+                        element.inactivestates += '<br>' + key;
                     }
-                } else if (this.modelreactions[i].reaction_fluxes[key][0] == 'FOR') {
-                    if (this.modelreactions[i].forwardstates == 'None') {
-                        this.modelreactions[i].forwardstates =
+                } else if (element.reaction_fluxes[key][0] == 'FOR') {
+                    if (element.forwardstates == 'None') {
+                        element.forwardstates =
                             'Average: ' +
-                            this.modelreactions[i].state_conservation['FOR'][2] +
+                            element.state_conservation['FOR'][2] +
                             ' +/- ' +
-                            this.modelreactions[i].state_conservation['FOR'][3] +
+                            element.state_conservation['FOR'][3] +
                             '<br>' +
                             key +
                             ': ' +
-                            this.modelreactions[i].reaction_fluxes[key][5];
+                            element.reaction_fluxes[key][5];
                     } else {
-                        this.modelreactions[i].forwardstates +=
-                            '<br>' + key + ': ' + this.modelreactions[i].reaction_fluxes[key][5];
+                        element.forwardstates +=
+                            '<br>' + key + ': ' + element.reaction_fluxes[key][5];
                     }
-                } else if (this.modelreactions[i].reaction_fluxes[key][0] == 'REV') {
-                    if (this.modelreactions[i].reversestates == 'None') {
-                        this.modelreactions[i].reversestates =
+                } else if (element.reaction_fluxes[key][0] == 'REV') {
+                    if (element.reversestates == 'None') {
+                        element.reversestates =
                             'Average: ' +
-                            this.modelreactions[i].state_conservation['REV'][2] +
+                            element.state_conservation['REV'][2] +
                             ' +/- ' +
-                            this.modelreactions[i].state_conservation['REV'][3] +
+                            element.state_conservation['REV'][3] +
                             '<br>' +
                             key +
                             ': ' +
-                            this.modelreactions[i].reaction_fluxes[key][5];
+                            element.reaction_fluxes[key][5];
                     } else {
-                        this.modelreactions[i].reversestates +=
-                            '<br>' + key + ': ' + this.modelreactions[i].reaction_fluxes[key][5];
+                        element.reversestates +=
+                            '<br>' + key + ': ' + element.reaction_fluxes[key][5];
                     }
                 }
             }
         }
 
         this.modelcompounds = this.data.compounds;
-        for (var i = 0; i < this.modelcompounds.length; i++) {
-            this.cpdhash[this.modelcompounds[i].id] = this.modelcompounds[i];
-            var idarray = this.modelcompounds[i]['id'].split('_');
-            var namearray = this.modelcompounds[i]['name'].split('_');
-            this.modelcompounds[i]['name'] = namearray[0];
-            this.modelcompounds[i].dispid = idarray[0] + '[' + idarray[1] + ']';
-            this.modelcompounds[i].exchange =
-                ' => ' + this.modelcompounds[i].name + '[' + namearray[1] + ']';
-            this.modelcompounds[i].numfba = 0;
-            var percent = Math.floor(
-                100 *
-                    this.modelcompounds[i].state_conservation[
-                        this.modelcompounds[i].most_common_state
-                    ][1]
+        for (const element of this.modelcompounds) {
+            this.cpdhash[element.id] = element;
+            const idarray = element['id'].split('_');
+            const namearray = element['name'].split('_');
+            element['name'] = namearray[0];
+            element.dispid = idarray[0] + '[' + idarray[1] + ']';
+            element.exchange = ' => ' + element.name + '[' + namearray[1] + ']';
+            element.numfba = 0;
+            const percent = Math.floor(
+                100 * element.state_conservation[element.most_common_state][1]
             );
-            this.modelcompounds[i].mostcommonstate =
-                this.modelcompounds[i].most_common_state + ' (' + percent + '%)';
-            if ('UP' in this.modelcompounds[i].state_conservation) {
-                this.modelcompounds[i].uptakestates =
+            element.mostcommonstate = element.most_common_state + ' (' + percent + '%)';
+            if ('UP' in element.state_conservation) {
+                element.uptakestates =
                     'Average: ' +
-                    this.modelcompounds[i].state_conservation['UP'][2] +
+                    element.state_conservation['UP'][2] +
                     ' +/- ' +
-                    this.modelcompounds[i].state_conservation['UP'][3];
+                    element.state_conservation['UP'][3];
             } else {
-                this.modelcompounds[i].uptakestates = 'None';
+                element.uptakestates = 'None';
             }
-            if ('EX' in this.modelcompounds[i].state_conservation) {
-                this.modelcompounds[i].excretionstates =
+            if ('EX' in element.state_conservation) {
+                element.excretionstates =
                     'Average: ' +
-                    this.modelcompounds[i].state_conservation['EX'][2] +
+                    element.state_conservation['EX'][2] +
                     ' +/- ' +
-                    this.modelcompounds[i].state_conservation['EX'][3];
+                    element.state_conservation['EX'][3];
             } else {
-                this.modelcompounds[i].excretionstates = 'None';
+                element.excretionstates = 'None';
             }
-            if ('IA' in this.modelcompounds[i].state_conservation) {
-                this.modelcompounds[i].inactivestates =
-                    'Count: ' + this.modelcompounds[i].state_conservation['IA'][0];
+            if ('IA' in element.state_conservation) {
+                element.inactivestates = 'Count: ' + element.state_conservation['IA'][0];
             } else {
-                this.modelcompounds[i].inactivestates = 'None';
+                element.inactivestates = 'None';
             }
-            for (var key in this.modelcompounds[i].exchanges) {
-                this.modelcompounds[i].numfba++;
-                if (this.modelcompounds[i].exchanges[key][0] == 'UP') {
-                    this.modelcompounds[i].uptakestates +=
-                        '<br>' + key + ': ' + this.modelcompounds[i].exchanges[key][5];
-                } else if (this.modelcompounds[i].exchanges[key][0] == 'EX') {
-                    this.modelcompounds[i].excretionstates +=
-                        '<br>' + key + ': ' + -1 * this.modelcompounds[i].exchanges[key][5];
+            for (const key in element.exchanges) {
+                element.numfba++;
+                if (element.exchanges[key][0] == 'UP') {
+                    element.uptakestates += '<br>' + key + ': ' + element.exchanges[key][5];
+                } else if (element.exchanges[key][0] == 'EX') {
+                    element.excretionstates += '<br>' + key + ': ' + -1 * element.exchanges[key][5];
                 } else {
-                    this.modelcompounds[i].inactivestates += '<br>' + key;
+                    element.inactivestates += '<br>' + key;
                 }
             }
         }

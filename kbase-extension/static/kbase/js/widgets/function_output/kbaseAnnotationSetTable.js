@@ -62,15 +62,15 @@ define([
                         ];
                         const tdata = [];
 
-                        for (let o = 0; o < otus.length; o++) {
-                            funcs = otus[o]['functions'];
+                        for (const element of otus) {
+                            const funcs = element['functions'];
                             for (let f = 0; f < funcs.length; f++) {
                                 tdata.push([
                                     funcs[f]['reference_genes'].join('<br>'),
                                     funcs[f]['functional_role'],
                                     funcs[f]['abundance'],
                                     funcs[f]['confidence'],
-                                    otus[o]['name'],
+                                    element['name'],
                                 ]);
                             }
                         }
@@ -111,13 +111,13 @@ define([
             return self;
         },
 
-        loggedInCallback: function (event, auth) {
+        loggedInCallback: function (_event, auth) {
             this.token = auth.token;
             this.render();
             return this;
         },
 
-        loggedOutCallback: function (event, auth) {
+        loggedOutCallback: function () {
             this.token = null;
             this.render();
             return this;

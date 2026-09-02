@@ -5,6 +5,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'plotly', 'kbaseSamplePropertyMatrixA
     Plotly,
     kbaseSamplePropertyMatrixAbstract
 ) => {
+    'use strict';
     return KBWidget({
         name: 'kbaseSamplePropertyHistogram',
         parent: kbaseSamplePropertyMatrixAbstract,
@@ -52,7 +53,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'plotly', 'kbaseSamplePropertyMatrixA
                         s2 += data.values[rIndex][cIndex] * data.values[rIndex][cIndex];
                     }
                     const avg = s1 / n;
-                    se = n > 1 ? Math.sqrt((s2 * n - s1 * s1) / (n - 1) / n / n) : 0;
+                    const se = n > 1 ? Math.sqrt((s2 * n - s1 * s1) / (n - 1) / n / n) : 0;
                     x.push(sampleProperty.name);
                     y.push(avg);
                     yErrors.push(se);

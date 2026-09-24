@@ -9,6 +9,17 @@ define([
 ], ($, Promise, ConfigSet, IconsSet, ServiceSet, FeatureSet, StagingUpload) => {
     'use strict';
 
+    // Override window.alert to suppress alerts and log them with stack traces
+    function suppressAlerts() {
+        const originalAlert = window.alert;
+        window.alert = function(message) {
+            const error = new Error(`Alert suppressed: ${message}`);
+            console.error('KBase Narrative: window.alert() call suppressed. Alert content:', message, '\nStack trace:', error.stack);
+        };
+    }
+
+    suppressAlerts();
+
     /**
      * Loads the required narrative configuration files.
      * This returns a Promise that will eventually hold the results.
